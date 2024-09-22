@@ -1,0 +1,7 @@
+node_modules
+.idea
+dist
+.env
+package-lock.json
+yarn.lock
+shop77_be.iml
