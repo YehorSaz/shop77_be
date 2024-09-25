@@ -8,3 +8,5 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type SignInPayload = Pick<IUser, 'email' | 'password'>;
