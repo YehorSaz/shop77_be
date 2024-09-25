@@ -9,15 +9,21 @@ export class UserValidator {
   private static phone = joi.string().regex(regexConstant.PHONE).trim();
 
   public static createUser = joi.object({
-    name: UserValidator.name.required(),
-    email: UserValidator.email.required(),
-    password: UserValidator.password.required(),
-    phone: UserValidator.phone.optional(),
+    name: this.name.required(),
+    email: this.email.required(),
+    password: this.password.required(),
+    phone: this.phone.optional(),
   });
+
   public static updateUser = joi.object({
-    name: UserValidator.name,
-    email: UserValidator.email,
-    password: UserValidator.password,
-    phone: UserValidator.phone,
+    name: this.name,
+    email: this.email,
+    password: this.password,
+    phone: this.phone,
+  });
+
+  public static login = joi.object({
+    email: this.email.required(),
+    password: this.password.required(),
   });
 }

@@ -6,4 +6,9 @@ export const configs = {
   API_PORT: Number(process.env.API_PORT) || 3005,
   API_HOST: process.env.API_HOST,
   DB_URI: process.env.DB_URI,
+
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
+  JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN,
+  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN,
 };

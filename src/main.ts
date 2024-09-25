@@ -3,14 +3,14 @@ import * as mongoose from 'mongoose';
 
 import { configs } from './configs/config';
 import { ApiError } from './errors/api-error';
-import { userRouter } from './routers';
+import { authRouter, userRouter } from './routers';
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 
 app.use(

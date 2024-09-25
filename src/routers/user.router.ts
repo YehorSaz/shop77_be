@@ -1,20 +1,13 @@
 import { Router } from 'express';
 
-import { userController } from '../controllers/user.controller';
-import { commonMiddleware } from '../middlewares/common.middleware';
-import { UserValidator } from '../validators/user.validator';
+import { userController } from '../controllers';
+import { authMiddleware, commonMiddleware } from '../middlewares';
+import { UserValidator } from '../validators';
 
 const router = Router();
 
 // get all users
 router.get('/', userController.getAll);
-
-// create new user
-router.post(
-  '/',
-  commonMiddleware.isBodyValid(UserValidator.createUser),
-  userController.create,
-);
 
 // get user by Id
 router.get(
@@ -26,6 +19,7 @@ router.get(
 // update user
 router.put(
   '/:userId',
+  authMiddleware.checkAccessToken,
   commonMiddleware.isIdValid('userId'),
   commonMiddleware.isBodyValid(UserValidator.updateUser),
   userController.updateById,

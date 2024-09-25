@@ -1,5 +1,5 @@
-import { IUser } from '../interfaces/user.interface';
-import { UserModel } from '../models/user.model';
+import { IUser } from '../interfaces';
+import { UserModel } from '../models';
 
 class UserRepository {
   public async getByParams(params: Partial<IUser>): Promise<IUser> {

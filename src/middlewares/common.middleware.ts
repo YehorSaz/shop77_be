@@ -24,7 +24,11 @@ class CommonMiddleware {
         req.body = await validator.validateAsync(req.body);
         next();
       } catch (e) {
-        next(e);
+        if (e.details[0].message.startsWith('"email"')) {
+          next(new ApiError('It is not an email', 400));
+        } else {
+          next(new ApiError(e.details[0].message, 400));
+        }
       }
     };
   }
