@@ -7,29 +7,23 @@ import { UserValidator } from '../validators';
 const router = Router();
 
 // get all users
-router.get('/', userController.getAll);
+router.get('/', authMiddleware.checkAccessToken, userController.getAll);
+
+// get me
+router.get('/me', authMiddleware.checkAccessToken, userController.getMe);
+
+// update me
+router.put(
+  '/me',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isBodyValid(UserValidator.updateUser),
+  userController.updateMe,
+);
+
+// delete me
+router.delete('/me', authMiddleware.checkAccessToken, userController.deleteMe);
 
 // get user by Id
-router.get(
-  '/:userId',
-  commonMiddleware.isIdValid('userId'),
-  userController.getById,
-);
-
-// update user
-router.put(
-  '/:userId',
-  authMiddleware.checkAccessToken,
-  commonMiddleware.isIdValid('userId'),
-  commonMiddleware.isBodyValid(UserValidator.updateUser),
-  userController.updateById,
-);
-
-// delete user
-router.delete(
-  '/:userId',
-  commonMiddleware.isIdValid('userId'),
-  userController.deleteById,
-);
+router.get('/:userId', authMiddleware.checkAccessToken, userController.getById);
 
 export const userRouter = router;
