@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as mongoose from 'mongoose';
 
 import { configs } from './configs/config';
+import { jobRunner } from './crons';
 import { ApiError } from './errors/api-error';
 import { authRouter, userRouter } from './routers';
 
@@ -30,4 +31,5 @@ app.listen(configs.API_PORT, configs.API_HOST, async () => {
   console.log(
     `Server is running at http://${configs.API_HOST}:${configs.API_PORT}`,
   );
+  jobRunner();
 });

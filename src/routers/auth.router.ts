@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authController } from '../controllers/auth.controller';
+import { ActionTokenTypeEnum } from '../enums/action-token-type.enum';
 import { authMiddleware, commonMiddleware } from '../middlewares';
 import { UserValidator } from '../validators';
 
@@ -25,6 +26,19 @@ router.post(
   '/refresh',
   authMiddleware.checkRefreshToken,
   authController.refresh,
+);
+
+router.get(
+  '/verify',
+  authMiddleware.checkActionToken(ActionTokenTypeEnum.VERIFY_EMAIL),
+  authController.verify,
+);
+
+router.post(
+  '/change-password',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isBodyValid(UserValidator.changePassword),
+  authController.changePassword,
 );
 
 export const authRouter = router;

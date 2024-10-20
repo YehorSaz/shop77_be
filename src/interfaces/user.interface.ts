@@ -9,4 +9,4 @@ export interface IUser {
   updatedAt?: Date;
 }
 
-export type SignInPayload = Pick<IUser, 'email' | 'password'>;
+export interface SignInPayload extends Pick<IUser, 'email' | 'password'> {}

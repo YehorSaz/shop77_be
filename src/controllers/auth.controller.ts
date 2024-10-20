@@ -1,6 +1,13 @@
+import path from 'node:path';
+
 import { NextFunction, Request, Response } from 'express';
 
-import { ITokenPayload, IUser, SignInPayload } from '../interfaces';
+import {
+  IChangePass,
+  ITokenPayload,
+  IUser,
+  SignInPayload,
+} from '../interfaces';
 import { authService } from '../services';
 
 class AuthController {
@@ -28,6 +35,48 @@ class AuthController {
       const oldTokensId = req.res.locals.oldTokensId as string;
       const result = await authService.refresh(jwtPayload, oldTokensId);
       res.status(201).json(result);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  public async verify(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+      await authService.verify(jwtPayload);
+      res
+        .status(200)
+        .sendFile(
+          path.join(
+            process.cwd(),
+            'src',
+            'templates',
+            'views',
+            'verify-success.html',
+          ),
+        );
+    } catch (e) {
+      res
+        .status(400)
+        .sendFile(
+          path.join(
+            process.cwd(),
+            'src',
+            'templates',
+            'views',
+            'verify-fail.html',
+          ),
+        );
+      next(e);
+    }
+  }
+
+  public async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+      const dto = req.body as IChangePass;
+      await authService.changePassword(jwtPayload, dto);
+      res.sendStatus(204);
     } catch (e) {
       next(e);
     }

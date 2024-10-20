@@ -18,7 +18,7 @@ class UserRepository {
     return await UserModel.findById(userId);
   }
 
-  public async updateById(userId: string, dto: IUser): Promise<IUser> {
+  public async updateById(userId: string, dto: Partial<IUser>): Promise<IUser> {
     return await UserModel.findByIdAndUpdate(userId, dto, {
       returnDocument: 'after',
     });
