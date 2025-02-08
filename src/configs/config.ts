@@ -24,4 +24,8 @@ export const configs = {
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
 
   VERIFY_URL: process.env.VERIFY_URL,
+
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+
+  SWAGGER_HOST: process.env.SWAGGER_HOST,
 };

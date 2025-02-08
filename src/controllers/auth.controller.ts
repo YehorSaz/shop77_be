@@ -4,6 +4,8 @@ import { NextFunction, Request, Response } from 'express';
 
 import {
   IChangePass,
+  IForgotResetPassword,
+  IForgotSendEmail,
   ITokenPayload,
   IUser,
   SignInPayload,
@@ -20,6 +22,7 @@ class AuthController {
       next(e);
     }
   }
+
   public async signIn(req: Request, res: Response, next: NextFunction) {
     try {
       const dto = req.body as SignInPayload;
@@ -29,6 +32,17 @@ class AuthController {
       next(e);
     }
   }
+
+  public async googleSignIn(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id_token } = req.body;
+      const result = await authService.googleSignIn(id_token);
+      res.status(201).json(result);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   public async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
@@ -76,6 +90,32 @@ class AuthController {
       const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
       const dto = req.body as IChangePass;
       await authService.changePassword(jwtPayload, dto);
+      res.sendStatus(204);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  public async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dto = req.body as IForgotSendEmail;
+      await authService.forgotPassword(dto);
+      res.sendStatus(204);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  public async forgotPasswordSet(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const dto = req.body as IForgotResetPassword;
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+
+      await authService.forgotPasswordSet(dto, jwtPayload);
       res.sendStatus(204);
     } catch (e) {
       next(e);

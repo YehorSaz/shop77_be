@@ -11,6 +11,9 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     phone: { type: String, required: false },
     isVerified: { type: Boolean, required: true, default: false },
+    isGoogleAuth: { type: Boolean, required: true, default: false },
+    purchaseLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
   },
   {
     timestamps: true,

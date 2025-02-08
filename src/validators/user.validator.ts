@@ -7,6 +7,7 @@ export class UserValidator {
   private static email = joi.string().regex(regexConstant.EMAIL).trim();
   private static password = joi.string().regex(regexConstant.PASSWORD).trim();
   private static phone = joi.string().regex(regexConstant.PHONE).trim();
+  private static mongoId = joi.string().regex(regexConstant.MONGO_ID);
 
   public static createUser = joi.object({
     name: this.name.required(),
@@ -30,5 +31,17 @@ export class UserValidator {
   public static changePassword = joi.object({
     oldPassword: this.password.required(),
     newPassword: this.password.required(),
+  });
+
+  public static forgotPassword = joi.object({
+    email: this.email.required(),
+  });
+
+  public static forgotPasswordSet = joi.object({
+    password: this.password.required(),
+  });
+
+  public static addFriend = joi.object({
+    friendId: this.mongoId.required(),
   });
 }

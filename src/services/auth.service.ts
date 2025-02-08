@@ -1,8 +1,14 @@
+import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
+
+import { configs } from '../configs/config';
 import { ActionTokenTypeEnum } from '../enums/action-token-type.enum';
 import { EmailTypeEnum } from '../enums/email-type.enum';
 import { ApiError } from '../errors/api-error';
 import {
   IChangePass,
+  IForgotResetPassword,
+  IForgotSendEmail,
   ITokenPair,
   ITokenPayload,
   IUser,
@@ -70,6 +76,34 @@ class AuthService {
     return { user, tokens };
   }
 
+  public async googleSignIn(
+    id_token: string,
+  ): Promise<{ user: IUser; tokens: ITokenPair }> {
+    const client = new OAuth2Client(configs.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: configs.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    let user = await userRepository.getByParams({ email: payload.email });
+    if (!user) {
+      const dto = {
+        name: payload.name,
+        email: payload.email,
+        password: await bcrypt.hash('dummyPassword', 10),
+        phone: '',
+        isVerified: true,
+        isGoogleAuth: true,
+      };
+      user = await userRepository.create(dto);
+    }
+    const tokens = await tokenService.generatePair({ userId: user._id });
+    await tokenRepository.create({ ...tokens, _userId: user._id });
+    return { user, tokens };
+  }
+
   public async refresh(
     payload: ITokenPayload,
     oldTokenId: string,
@@ -107,6 +141,40 @@ class AuthService {
     const password = await passwordService.hashPassword(dto.newPassword);
     await userRepository.updateById(jwtPayload.userId, { password });
     await tokenRepository.deleteByParams({ _userId: jwtPayload.userId });
+  }
+
+  public async forgotPassword(dto: IForgotSendEmail): Promise<void> {
+    const user = await userRepository.getByParams({ email: dto.email });
+    if (!user) return;
+    const actionToken = await tokenService.generateActionToken(
+      { userId: user._id },
+      ActionTokenTypeEnum.FORGOT_PASSWORD,
+    );
+    await actionTokenRepository.create({
+      actionToken,
+      type: ActionTokenTypeEnum.FORGOT_PASSWORD,
+      _userId: user._id,
+    });
+    await emailService.sendEmail(EmailTypeEnum.FORGOT_PASSWORD, dto.email, {
+      name: user.name,
+      actionToken,
+    });
+  }
+
+  public async forgotPasswordSet(
+    dto: IForgotResetPassword,
+    jwtPayload: ITokenPayload,
+  ): Promise<void> {
+    const password = await passwordService.hashPassword(dto.password);
+    await userRepository.updateById(jwtPayload.userId, { password });
+
+    await actionTokenRepository.deleteByParams({
+      _userId: jwtPayload.userId,
+      type: ActionTokenTypeEnum.FORGOT_PASSWORD,
+    });
+    await tokenRepository.deleteByParams({
+      _userId: jwtPayload.userId,
+    });
   }
 
   private async isEmailExist(email: string): Promise<void> {

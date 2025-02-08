@@ -17,6 +17,7 @@ router.post(
 // sign in
 router.post(
   '/sign-in',
+  commonMiddleware.isAuthWithGoogle(),
   commonMiddleware.isBodyValid(UserValidator.login),
   authController.signIn,
 );
@@ -40,5 +41,20 @@ router.post(
   commonMiddleware.isBodyValid(UserValidator.changePassword),
   authController.changePassword,
 );
+
+router.post(
+  '/forgot-password',
+  commonMiddleware.isBodyValid(UserValidator.forgotPassword),
+  authController.forgotPassword,
+);
+
+router.put(
+  '/forgot-password',
+  commonMiddleware.isBodyValid(UserValidator.forgotPasswordSet),
+  authMiddleware.checkActionToken(ActionTokenTypeEnum.FORGOT_PASSWORD),
+  authController.forgotPasswordSet,
+);
+
+router.post('/google', authController.googleSignIn);
 
 export const authRouter = router;
