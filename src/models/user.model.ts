@@ -12,7 +12,10 @@ const userSchema = new Schema(
     phone: { type: String, required: false },
     isVerified: { type: Boolean, required: true, default: false },
     isGoogleAuth: { type: Boolean, required: true, default: false },
-    purchaseLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
+    purchaseLists: {
+      myLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
+      sharedLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
+    },
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
   },
   {

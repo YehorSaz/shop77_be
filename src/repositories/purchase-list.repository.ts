@@ -1,10 +1,13 @@
 import { ApiError } from '../errors/api-error';
-import { IPurchase, IPurchaseList } from '../interfaces';
+import { IPurchase, IPurchaseList, IPurchaseListResponse } from '../interfaces';
 import { PurchaseListModel, UserModel } from '../models';
 
 class PurchaseListRepository {
-  public async getAllByUserId(userId: string): Promise<IPurchaseList[]> {
-    return await PurchaseListModel.find({ user: userId });
+  public async getAllByUserId(userId: string): Promise<IPurchaseListResponse> {
+    const myLists = await PurchaseListModel.find({ user: userId });
+    const sharedWithMe = await PurchaseListModel.find({ sharedWith: userId });
+
+    return { myLists, sharedWithMe };
   }
 
   public async getById(id: string): Promise<IPurchaseList> {
@@ -22,9 +25,20 @@ class PurchaseListRepository {
       sharedWith: dto.sharedWith,
     });
     await UserModel.findByIdAndUpdate(userId, {
-      $push: { purchaseLists: purchaseList._id },
+      $push: {
+        'purchaseLists.myLists': purchaseList._id,
+        'purchaseLists.sharedLists': dto.sharedWith?.length
+          ? purchaseList._id
+          : [],
+      },
     });
 
+    if (dto.sharedWith?.length) {
+      await UserModel.updateMany(
+        { _id: { $in: dto.sharedWith } },
+        { $push: { 'purchaseLists.sharedLists': purchaseList._id } },
+      );
+    }
     return purchaseList;
   }
 
@@ -151,24 +165,52 @@ class PurchaseListRepository {
 
   public async shareList(
     purchaseListId: string,
-    userId: string,
+    usersId: string[],
+    ownerId: string,
   ): Promise<IPurchaseList> {
+    await UserModel.updateMany(
+      { _id: { $in: usersId } },
+      { $addToSet: { 'purchaseLists.sharedLists': purchaseListId } },
+    );
+
+    await UserModel.findByIdAndUpdate(ownerId, {
+      $addToSet: { 'purchaseLists.sharedLists': purchaseListId },
+    });
+
     return await PurchaseListModel.findByIdAndUpdate(
       purchaseListId,
-      { $addToSet: { sharedWith: userId } },
+      { $addToSet: { sharedWith: { $each: usersId } } },
       { new: true },
     );
   }
 
   public async unShareList(
     purchaseListId: string,
-    userId: string,
+    ownerId: string,
+    usersId?: string[],
+    unShareAll?: boolean,
   ): Promise<IPurchaseList> {
-    return await PurchaseListModel.findByIdAndUpdate(
-      purchaseListId,
-      { $pull: { sharedWith: userId } },
-      { new: true },
+    let usersToRemove: string[];
+    if (unShareAll) {
+      const list = await PurchaseListModel.findById(purchaseListId);
+      if (!list) {
+        throw new ApiError('List not found', 404);
+      }
+      usersToRemove = [...list.sharedWith, ownerId];
+    } else if (usersId && usersId.length > 0) {
+      usersToRemove = usersId;
+    } else {
+      throw new ApiError('No users specified for unsharing', 400);
+    }
+
+    await UserModel.updateMany(
+      { _id: { $in: usersToRemove } },
+      { $pull: { 'purchaseLists.sharedLists': purchaseListId } },
     );
+
+    return await PurchaseListModel.findByIdAndUpdate(purchaseListId, {
+      $pull: { sharedWith: { $in: usersToRemove } },
+    });
   }
 }
 

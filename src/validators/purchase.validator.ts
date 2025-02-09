@@ -8,6 +8,7 @@ export class PurchaseValidator {
     isCompleted: joi.boolean().default(false),
     addedBy: joi.string().optional(),
   });
+  private static userId = joi.string().regex(regexConstant.MONGO_ID);
 
   public static createPurchaseList = joi.object({
     title: joi.string().min(1).max(50).required(),
@@ -30,6 +31,11 @@ export class PurchaseValidator {
   });
 
   public static sharedId = joi.object({
-    userId: joi.string().regex(regexConstant.MONGO_ID).required(),
+    usersId: joi.array().items(this.userId).required(),
+  });
+
+  public static unShareBody = joi.object({
+    usersId: joi.array().items(this.userId),
+    unShareAll: joi.boolean(),
   });
 }

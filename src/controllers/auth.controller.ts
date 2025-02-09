@@ -27,7 +27,7 @@ class AuthController {
     try {
       const dto = req.body as SignInPayload;
       const result = await authService.signIn(dto);
-      res.status(201).json(result);
+      res.status(200).json(result);
     } catch (e) {
       next(e);
     }

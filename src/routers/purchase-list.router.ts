@@ -70,9 +70,10 @@ router.post(
 );
 // unShare list
 router.delete(
-  '/:purchaseListId/share/:userId',
+  '/:purchaseListId/share',
   authMiddleware.checkAccessToken,
   commonMiddleware.isOwner(),
+  commonMiddleware.isPurchaseBodyValid(PurchaseValidator.unShareBody),
   purchaseController.unShareList,
 );
 

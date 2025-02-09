@@ -10,6 +10,10 @@ class UserService {
     return await userRepository.getById(userId);
   }
 
+  public async getMe(userId: string): Promise<IUser> {
+    return await userRepository.getMe(userId);
+  }
+
   public async updateById(userId: string, dto: IUser) {
     return await userRepository.updateById(userId, dto);
   }

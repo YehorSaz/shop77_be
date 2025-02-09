@@ -7,7 +7,7 @@ class UserController {
   public async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await userService.getAll();
-      res.json(result);
+      res.status(200).json(result);
     } catch (e) {
       next(e);
     }
@@ -17,7 +17,7 @@ class UserController {
     try {
       const userId = req.params.userId;
       const user = await userService.getById(userId);
-      res.status(201).json(user);
+      res.status(200).json(user);
     } catch (e) {
       next(e);
     }
@@ -26,8 +26,8 @@ class UserController {
   public async getMe(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.res.locals.jwtPayload.userId as string;
-      const user = await userService.getById(userId);
-      res.json(user);
+      const user = await userService.getMe(userId);
+      res.status(200).json(user);
     } catch (e) {
       next(e);
     }

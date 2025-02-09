@@ -15,3 +15,8 @@ export interface IPurchaseList {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface IPurchaseListResponse {
+  myLists: IPurchaseList[];
+  sharedWithMe: IPurchaseList[];
+}

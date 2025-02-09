@@ -1,8 +1,8 @@
-import { IPurchase, IPurchaseList } from '../interfaces';
+import { IPurchase, IPurchaseList, IPurchaseListResponse } from '../interfaces';
 import { purchaseListRepository } from '../repositories/purchase-list.repository';
 
 class PurchaseListService {
-  public async getAllByUserId(userId: string): Promise<IPurchaseList[]> {
+  public async getAllByUserId(userId: string): Promise<IPurchaseListResponse> {
     return await purchaseListRepository.getAllByUserId(userId);
   }
 
@@ -65,16 +65,28 @@ class PurchaseListService {
 
   public async shareList(
     purchaseListId: string,
-    userId: string,
+    usersId: string[],
+    ownerId: string,
   ): Promise<IPurchaseList> {
-    return await purchaseListRepository.shareList(purchaseListId, userId);
+    return await purchaseListRepository.shareList(
+      purchaseListId,
+      usersId,
+      ownerId,
+    );
   }
 
   public async unShareList(
     purchaseListId: string,
-    userId: string,
+    usersId: string[],
+    unShareAll: boolean,
+    ownerId: string,
   ): Promise<IPurchaseList> {
-    return await purchaseListRepository.unShareList(purchaseListId, userId);
+    return await purchaseListRepository.unShareList(
+      purchaseListId,
+      ownerId,
+      usersId,
+      unShareAll,
+    );
   }
 }
 

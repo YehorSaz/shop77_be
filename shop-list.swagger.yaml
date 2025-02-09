@@ -9,6 +9,8 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+security:
+  - bearerAuth: []
 tags:
   - name: users
   - name: auth
@@ -175,20 +177,30 @@ paths:
     post:
       tags:
         - auth
-      summary: refresh
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: '""'
-      security:
-        - bearerAuth: []
+      summary: Refresh access token
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            example: "Bearer <refreshToken>"
+          required: true
       responses:
         '200':
-          description: Successful response
+          description: Successfully refreshed access token
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    description: New access token
+                  refreshToken:
+                    type: string
+                    description: New refresh token
+
+
   /auth/change-password:
     post:
       tags:
@@ -341,23 +353,56 @@ paths:
           content:
             application/json: {}
     delete:
+      summary: Unshare a purchase list
+      description: Remove one or multiple users from the shared list or unshare the list from everyone.
       tags:
-        - purchase
-      summary: unShareList
-      security:
-        - bearerAuth: []
+        - Purchase Lists
       parameters:
         - name: purchaseListId
           in: path
+          required: true
+          description: ID of the purchase list to unshare
           schema:
             type: string
-          required: true
-          example: 67a6483cb40aa919bb02a967
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usersId:
+                  type: array
+                  items:
+                    type: string
+                  description: List of user IDs to remove from shared access
+                unShareAll:
+                  type: boolean
+                  description: Set to `true` to unshare the list from all users
       responses:
-        '200':
-          description: Successful response
+        200:
+          description: List successfully unshared
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    description: The ID of the updated purchase list
+                  sharedWith:
+                    type: array
+                    items:
+                      type: string
+                    description: Updated list of users who still have access
+        400:
+          description: Bad request (e.g., missing parameters)
+        404:
+          description: List not found
+        500:
+          description: Server error
+      security:
+        - bearerAuth: [ ]
   /purchase-list/{purchaseListId}/items:
     post:
       tags:

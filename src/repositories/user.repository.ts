@@ -16,9 +16,12 @@ class UserRepository {
   }
 
   public async getById(userId: string): Promise<IUser> {
-    const user = await UserModel.findById(userId)
-      .populate('purchaseLists')
-      .exec();
+    const user = await UserModel.findById(userId);
+    return user;
+  }
+
+  public async getMe(userId: string): Promise<IUser> {
+    const user = await UserModel.findById(userId);
     return user;
   }
 

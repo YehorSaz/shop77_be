@@ -19,7 +19,7 @@ class PurchaseListController {
     try {
       const userId = req.res.locals.jwtPayload.userId as string;
       const result = await purchaseListService.getAllByUserId(userId);
-      res.json(result);
+      res.status(200).json(result);
     } catch (e) {
       next(e);
     }
@@ -159,11 +159,16 @@ class PurchaseListController {
 
   public async shareList(req: Request, res: Response, next: NextFunction) {
     try {
+      const ownerId = req.res.locals.jwtPayload.userId as string;
       const { purchaseListId } = req.params;
-      const { userId } = req.body;
+      const { usersId } = req.body;
+      if (!usersId) {
+        throw new ApiError('No users to share', 400);
+      }
       const result = await purchaseListService.shareList(
         purchaseListId,
-        userId,
+        usersId,
+        ownerId,
       );
       res.status(200).json(result);
     } catch (e) {
@@ -173,10 +178,14 @@ class PurchaseListController {
 
   public async unShareList(req: Request, res: Response, next: NextFunction) {
     try {
-      const { purchaseListId, userId } = req.params;
+      const ownerId = req.res.locals.jwtPayload.userId as string;
+      const { purchaseListId } = req.params;
+      const { usersId, unShareAll } = req.body;
       const result = await purchaseListService.unShareList(
         purchaseListId,
-        userId,
+        usersId,
+        unShareAll,
+        ownerId,
       );
       res.status(200).json(result);
     } catch (e) {
