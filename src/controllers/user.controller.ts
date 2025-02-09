@@ -58,6 +58,28 @@ class UserController {
       next(e);
     }
   }
+
+  public async addFriend(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.res.locals.jwtPayload.userId as string;
+      const { friendId } = req.body;
+      const result = await userService.addFriend(userId, friendId);
+      res.status(200).json(result);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  public async delFromFriends(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.res.locals.jwtPayload.userId as string;
+      const { friendId } = req.body;
+      const result = await userService.delFromFriends(userId, friendId);
+      res.status(200).json(result);
+    } catch (e) {
+      next(e);
+    }
+  }
 }
 
 export const userController = new UserController();

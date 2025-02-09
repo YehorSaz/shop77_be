@@ -15,7 +15,7 @@ class TokenService {
       payload,
       configs.JWT_REFRESH_SECRET,
       {
-        expiresIn: configs.JWT_REFRESH_EXPIRES_IN,
+        expiresIn: configs.JWT_ACCESS_EXPIRES_IN,
       },
     );
     return {
@@ -48,7 +48,7 @@ class TokenService {
     type: ActionTokenTypeEnum,
   ): Promise<string> {
     let secret: string;
-    let expiresIn: string;
+    let expiresIn: string | number;
 
     switch (type) {
       case ActionTokenTypeEnum.FORGOT_PASSWORD:

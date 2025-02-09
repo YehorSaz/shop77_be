@@ -1,3 +1,4 @@
+import { ApiError } from '../errors/api-error';
 import { IUser } from '../interfaces';
 import { UserModel } from '../models';
 
@@ -15,7 +16,10 @@ class UserRepository {
   }
 
   public async getById(userId: string): Promise<IUser> {
-    return await UserModel.findById(userId);
+    const user = await UserModel.findById(userId)
+      .populate('purchaseLists')
+      .exec();
+    return user;
   }
 
   public async updateById(userId: string, dto: Partial<IUser>): Promise<IUser> {
@@ -26,6 +30,45 @@ class UserRepository {
 
   public async deleteById(userId: string): Promise<void> {
     await UserModel.deleteOne({ _id: userId });
+  }
+
+  public async addFriend(userId: string, friendId: string): Promise<IUser> {
+    try {
+      await UserModel.findByIdAndUpdate(
+        friendId,
+        { $addToSet: { friends: userId } },
+        { new: true },
+      );
+    } catch (e) {
+      throw new ApiError('User not found', 404);
+    }
+
+    return await UserModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { friends: friendId } },
+      { new: true },
+    );
+  }
+
+  public async delFromFriends(
+    userId: string,
+    friendId: string,
+  ): Promise<IUser> {
+    try {
+      await UserModel.findByIdAndUpdate(
+        friendId,
+        { $pull: { friends: userId } },
+        { new: true },
+      );
+    } catch (e) {
+      throw new ApiError('User not found', 404);
+    }
+
+    return await UserModel.findByIdAndUpdate(
+      userId,
+      { $pull: { friends: friendId } },
+      { new: true },
+    );
   }
 }
 

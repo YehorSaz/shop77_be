@@ -26,4 +26,20 @@ router.delete('/me', authMiddleware.checkAccessToken, userController.deleteMe);
 // get user by Id
 router.get('/:userId', authMiddleware.checkAccessToken, userController.getById);
 
+// add friends
+router.post(
+  '/friends',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isBodyValid(UserValidator.addFriend),
+  userController.addFriend,
+);
+
+// delete from friends
+router.delete(
+  '/friends',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isBodyValid(UserValidator.addFriend),
+  userController.delFromFriends,
+);
+
 export const userRouter = router;

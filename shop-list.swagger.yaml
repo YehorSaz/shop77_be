@@ -1,0 +1,439 @@
+openapi: 3.0.0
+info:
+  title: shop77
+  version: 1.0.0
+servers:
+  - url:
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+tags:
+  - name: users
+  - name: auth
+  - name: purchase
+paths:
+  /users:
+    get:
+      tags:
+        - users
+      summary: getAll
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/{userId}:
+    get:
+      tags:
+        - users
+      summary: getById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 67a6483cb40aa919bb02a967
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/me:
+    get:
+      tags:
+        - users
+      summary: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - users
+      summary: dellMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - users
+      summary: updateMe
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: max555
+                email:
+                  type: string
+                  example: max55@gmail.com
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/friends:
+    post:
+      tags:
+        - users
+      summary: addFriend
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                friendId: 66f4009acb445514a69e1b34
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - users
+      summary: delFromFriends
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/sign-up:
+    post:
+      tags:
+        - auth
+      summary: signUp
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: max6
+                email:
+                  type: string
+                  example: max6@gmail.com
+                password:
+                  type: string
+                  example: P@$$word1
+                phone:
+                  type: number
+                  example: '+380635554433'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/sign-in:
+    post:
+      tags:
+        - auth
+      summary: signIn
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: max55@gmail.com
+                password:
+                  type: string
+                  example: P@$$word1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: refresh
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '""'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/change-password:
+    post:
+      tags:
+        - auth
+      summary: forgotPassword
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: P@$$word1
+                newPassword:
+                  type: string
+                  example: P@$$word2
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/forgot-password:
+    put:
+      tags:
+        - auth
+      summary: forgotPasswordSet
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: P@$$word1
+                newPassword:
+                  type: string
+                  example: P@$$word2
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /purchase-list:
+    post:
+      tags:
+        - purchase
+      summary: addPurchaseList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: My new list
+                items:
+                  - name: lemon
+                  - name: apple
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    get:
+      tags:
+        - purchase
+      summary: getPurchaseLists
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /purchase-list/{purchaseListId}:
+    put:
+      tags:
+        - purchase
+      summary: updatePurchaseList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: My updated list3
+                items:
+                  - name: ttttt
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - purchase
+      summary: deletePurchaseList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 67a6483cb40aa919bb02a967
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /purchase-list/{purchaseListId}/share:
+    post:
+      tags:
+        - purchase
+      summary: shareList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: ''
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 67a6483cb40aa919bb02a967
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - purchase
+      summary: unShareList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 67a6483cb40aa919bb02a967
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /purchase-list/{purchaseListId}/items:
+    post:
+      tags:
+        - purchase
+      summary: addItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: ''
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /purchase-list/{purchaseListId}/items/{itemId}:
+    patch:
+      tags:
+        - purchase
+      summary: updateItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example: ''
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 6795634b37631dd54570f0ca
+        - name: itemId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 679879b5a74bed340579edcb
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - purchase
+      summary: deleteItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purchaseListId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 6795634b37631dd54570f0ca
+        - name: itemId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 679879b5a74bed340579edcb
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

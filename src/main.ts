@@ -24,12 +24,6 @@ app.use('*', (req: Request, res: Response) => {
 app.use((error: ApiError, req: Request, res: Response, next: NextFunction) => {
   res.status(error.status || 500).json({ message: error.message });
 });
-// app.use(
-//   '*',
-//   (error: ApiError, req: Request, res: Response, next: NextFunction) => {
-//     res.status(error.status || 500).json(error.message);
-//   },
-// );
 
 process.on('uncaughtException', (e) => {
   console.error('uncaughtException', e.message, e.stack);
