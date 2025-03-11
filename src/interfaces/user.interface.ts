@@ -18,3 +18,9 @@ export interface IUser {
 }
 
 export interface SignInPayload extends Pick<IUser, 'email' | 'password'> {}
+export interface SignUpPayload
+  extends Pick<
+    IUser,
+    'name' | 'email' | 'password' | 'phone' | 'isVerified' | 'isGoogleAuth'
+  > {}
+export interface IUserPublic extends Omit<IUser, 'password'> {}

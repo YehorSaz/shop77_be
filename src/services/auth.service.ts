@@ -5,6 +5,7 @@ import { configs } from '../configs/config';
 import { ActionTokenTypeEnum } from '../enums/action-token-type.enum';
 import { EmailTypeEnum } from '../enums/email-type.enum';
 import { ApiError } from '../errors/api-error';
+import { removePassFromUser } from '../helpers/removePassFromUser-helper';
 import {
   IChangePass,
   IForgotResetPassword,
@@ -12,7 +13,9 @@ import {
   ITokenPair,
   ITokenPayload,
   IUser,
+  IUserPublic,
   SignInPayload,
+  SignUpPayload,
 } from '../interfaces';
 import {
   actionTokenRepository,
@@ -25,7 +28,7 @@ import { tokenService } from './token.service';
 
 class AuthService {
   public async signUp(
-    dto: IUser,
+    dto: SignUpPayload,
   ): Promise<{ user: IUser; tokens: ITokenPair }> {
     const { email } = dto;
     await this.isEmailExist(email);
@@ -57,7 +60,7 @@ class AuthService {
 
   public async signIn(
     dto: SignInPayload,
-  ): Promise<{ user: IUser; tokens: ITokenPair }> {
+  ): Promise<{ user: IUserPublic; tokens: ITokenPair }> {
     const user = await userRepository.getByParams({ email: dto.email });
     if (!user) {
       throw new ApiError('Invalid credentials', 401);
@@ -73,7 +76,7 @@ class AuthService {
     const tokens = await tokenService.generatePair({ userId: user._id });
     await tokenRepository.create({ ...tokens, _userId: user._id });
 
-    return { user, tokens };
+    return { user: removePassFromUser(user), tokens };
   }
 
   public async googleSignIn(

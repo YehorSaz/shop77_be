@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { IUser } from '../interfaces';
+import { IUserPublic } from '../interfaces';
 import { userService } from '../services';
 
 class UserController {
@@ -36,7 +36,7 @@ class UserController {
   public async updateMe(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.res.locals.jwtPayload.userId as string;
-      const dto = req.body as IUser;
+      const dto = req.body as IUserPublic;
 
       const user = await userService.updateById(userId, dto);
       res.status(201).json(user);

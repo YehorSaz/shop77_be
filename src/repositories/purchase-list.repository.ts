@@ -3,6 +3,28 @@ import { IPurchase, IPurchaseList, IPurchaseListResponse } from '../interfaces';
 import { PurchaseListModel, UserModel } from '../models';
 
 class PurchaseListRepository {
+  public async deleteAllPurchaseListsByUserId(userId: string) {
+    const purchaseLists = await PurchaseListModel.find({ user: userId });
+
+    if (!purchaseLists.length) return;
+
+    const sharedUsers = new Set<string>();
+
+    for (const list of purchaseLists) {
+      list.sharedWith.forEach((user) => sharedUsers.add(user));
+    }
+
+    const listIds = purchaseLists.map((list) => list._id);
+
+    await Promise.all([
+      PurchaseListModel.deleteMany({ _id: { $in: listIds } }),
+      UserModel.updateMany(
+        { _id: { $in: Array.from(sharedUsers) } },
+        { $pull: { 'purchaseLists.sharedLists': { $in: listIds } } },
+      ),
+    ]);
+  }
+
   public async getAllByUserId(userId: string): Promise<IPurchaseListResponse> {
     const myLists = await PurchaseListModel.find({ user: userId });
     const sharedWithMe = await PurchaseListModel.find({ sharedWith: userId });
@@ -157,10 +179,19 @@ class PurchaseListRepository {
       );
     }
 
-    await PurchaseListModel.findByIdAndDelete(purchaseList);
-    await UserModel.findByIdAndUpdate(userId, {
-      $pull: { purchaseLists: purchaseListId },
-    });
+    await Promise.all([
+      PurchaseListModel.findByIdAndDelete(purchaseListId),
+      UserModel.findByIdAndUpdate(userId, {
+        $pull: {
+          'purchaseLists.sharedLists': purchaseListId,
+          'purchaseLists.myLists': purchaseListId,
+        },
+      }),
+      UserModel.updateMany(
+        { _id: { $in: purchaseList.sharedWith } },
+        { $pull: { 'purchaseLists.sharedLists': purchaseListId } },
+      ),
+    ]);
   }
 
   public async shareList(
@@ -168,14 +199,15 @@ class PurchaseListRepository {
     usersId: string[],
     ownerId: string,
   ): Promise<IPurchaseList> {
-    await UserModel.updateMany(
-      { _id: { $in: usersId } },
-      { $addToSet: { 'purchaseLists.sharedLists': purchaseListId } },
-    );
-
-    await UserModel.findByIdAndUpdate(ownerId, {
-      $addToSet: { 'purchaseLists.sharedLists': purchaseListId },
-    });
+    await Promise.all([
+      UserModel.updateMany(
+        { _id: { $in: usersId } },
+        { $addToSet: { 'purchaseLists.sharedLists': purchaseListId } },
+      ),
+      UserModel.findByIdAndUpdate(ownerId, {
+        $addToSet: { 'purchaseLists.sharedLists': purchaseListId },
+      }),
+    ]);
 
     return await PurchaseListModel.findByIdAndUpdate(
       purchaseListId,

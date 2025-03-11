@@ -7,15 +7,15 @@ import {
   IForgotResetPassword,
   IForgotSendEmail,
   ITokenPayload,
-  IUser,
   SignInPayload,
+  SignUpPayload,
 } from '../interfaces';
 import { authService } from '../services';
 
 class AuthController {
   public async signUp(req: Request, res: Response, next: NextFunction) {
     try {
-      const dto = req.body as IUser;
+      const dto = req.body as SignUpPayload;
       const result = await authService.signUp(dto);
       res.status(201).json(result);
     } catch (e) {

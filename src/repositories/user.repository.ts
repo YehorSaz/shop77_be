@@ -1,6 +1,7 @@
 import { ApiError } from '../errors/api-error';
 import { IUser } from '../interfaces';
 import { UserModel } from '../models';
+import { purchaseListRepository } from './purchase-list.repository';
 
 class UserRepository {
   public async getByParams(params: Partial<IUser>): Promise<IUser> {
@@ -32,6 +33,7 @@ class UserRepository {
   }
 
   public async deleteById(userId: string): Promise<void> {
+    await purchaseListRepository.deleteAllPurchaseListsByUserId(userId);
     await UserModel.deleteOne({ _id: userId });
   }
 
