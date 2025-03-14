@@ -17,7 +17,7 @@ router.post(
 // sign in
 router.post(
   '/sign-in',
-  commonMiddleware.isAuthWithGoogle(),
+  // commonMiddleware.isAuthWithGoogle(),
   commonMiddleware.isBodyValid(UserValidator.login),
   authController.signIn,
 );
@@ -33,6 +33,13 @@ router.get(
   '/verify',
   authMiddleware.checkActionToken(ActionTokenTypeEnum.VERIFY_EMAIL),
   authController.verify,
+);
+
+router.post(
+  '/set-password',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isBodyValid(UserValidator.setPassword),
+  authController.setPassword,
 );
 
 router.post(

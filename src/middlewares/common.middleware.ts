@@ -14,7 +14,7 @@ class CommonMiddleware {
         });
         const isGoogleAuth = user.isGoogleAuth;
         if (isGoogleAuth) {
-          throw new ApiError('This account requires Google Sign-In.', 400);
+          throw new ApiError('This account requires Google Sign-In.', 401);
         }
         next();
       } catch (e) {

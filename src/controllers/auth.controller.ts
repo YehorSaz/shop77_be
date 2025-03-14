@@ -85,6 +85,17 @@ class AuthController {
     }
   }
 
+  public async setPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+      const { password } = req.body;
+      await authService.setPassword(jwtPayload, password);
+      res.status(200).json({ message: 'password created' });
+    } catch (e) {
+      next(e);
+    }
+  }
+
   public async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
       const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;

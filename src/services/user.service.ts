@@ -4,8 +4,7 @@ import { userRepository } from '../repositories';
 
 class UserService {
   public async getAll(): Promise<IUserPublic[]> {
-    const users = await userRepository.getAll();
-    return users.map((user) => removePassFromUser(user));
+    return await userRepository.getAll();
   }
 
   public async getById(userId: string): Promise<IUserPublic> {

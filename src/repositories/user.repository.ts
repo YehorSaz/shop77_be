@@ -4,8 +4,15 @@ import { UserModel } from '../models';
 import { purchaseListRepository } from './purchase-list.repository';
 
 class UserRepository {
-  public async getByParams(params: Partial<IUser>): Promise<IUser> {
-    return await UserModel.findOne(params);
+  public async getByParams(
+    params: Partial<IUser>,
+    select?: string,
+  ): Promise<IUser | null> {
+    const query = UserModel.findOne(params);
+    if (select) {
+      query.select(select);
+    }
+    return await query.exec();
   }
 
   public async getAll(): Promise<IUser[]> {

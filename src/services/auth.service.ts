@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 
 import { configs } from '../configs/config';
@@ -61,7 +61,10 @@ class AuthService {
   public async signIn(
     dto: SignInPayload,
   ): Promise<{ user: IUserPublic; tokens: ITokenPair }> {
-    const user = await userRepository.getByParams({ email: dto.email });
+    const user = await userRepository.getByParams(
+      { email: dto.email },
+      '+password',
+    );
     if (!user) {
       throw new ApiError('Invalid credentials', 401);
     }
@@ -81,7 +84,7 @@ class AuthService {
 
   public async googleSignIn(
     id_token: string,
-  ): Promise<{ user: IUser; tokens: ITokenPair }> {
+  ): Promise<{ user: IUserPublic; tokens: ITokenPair }> {
     const client = new OAuth2Client(configs.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: id_token,
@@ -95,7 +98,7 @@ class AuthService {
       const dto = {
         name: payload.name,
         email: payload.email,
-        password: await bcrypt.hash('dummyPassword', 10),
+        // password: await bcrypt.hash('P@$$word1', 10),
         phone: '',
         isVerified: true,
         isGoogleAuth: true,
@@ -104,7 +107,7 @@ class AuthService {
     }
     const tokens = await tokenService.generatePair({ userId: user._id });
     await tokenRepository.create({ ...tokens, _userId: user._id });
-    return { user, tokens };
+    return { user: removePassFromUser(user), tokens };
   }
 
   public async refresh(
@@ -125,6 +128,20 @@ class AuthService {
     await actionTokenRepository.deleteByParams({
       _userId: jwtPayload.userId,
       type: ActionTokenTypeEnum.VERIFY_EMAIL,
+    });
+  }
+
+  public async setPassword(
+    jwtPayload: ITokenPayload,
+    password: string,
+  ): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+    const hashedPassword = await passwordService.hashPassword(password);
+    await userRepository.updateById(jwtPayload.userId, {
+      password: hashedPassword,
     });
   }
 
