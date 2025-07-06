@@ -150,6 +150,9 @@ class AuthService {
     dto: IChangePass,
   ): Promise<void> {
     const user = await userRepository.getById(jwtPayload.userId);
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
     const isPassCorrect = await passwordService.comparePassword(
       dto.oldPassword,
       user.password,

@@ -1,4 +1,7 @@
 openapi: 3.0.0
+# Shop List API Documentation
+# This document describes the API for managing user accounts, authentication, and purchase lists.
+# It includes endpoints for user management, authentication, and CRUD operations on purchase lists.
 info:
   title: shop77
   version: 1.0.0
