@@ -13,6 +13,21 @@ router.get(
   purchaseController.getAllByUserId,
 );
 
+// get shared with me purchase lists
+// router.get(
+//   '/sharedWithMe',
+//   authMiddleware.checkAccessToken,
+//   purchaseController.getSharedWithMeLists,
+// );
+
+// get purchase list by id
+router.get(
+  '/:purchaseListId',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.hasAccessToPurchaseList(),
+  purchaseController.getListById,
+);
+
 //add purchase list
 router.post(
   '/',
@@ -53,7 +68,7 @@ router.patch(
   purchaseController.updateItem,
 );
 
-// delete purchase
+// delete purchase from list
 router.delete(
   '/:purchaseListId/items/:itemId',
   authMiddleware.checkAccessToken,
@@ -65,12 +80,12 @@ router.post(
   '/:purchaseListId/share',
   authMiddleware.checkAccessToken,
   commonMiddleware.isOwner(),
-  commonMiddleware.isPurchaseBodyValid(PurchaseValidator.sharedId),
+  // commonMiddleware.isPurchaseBodyValid(PurchaseValidator.sharedId),
   purchaseController.shareList,
 );
 // unShare list
-router.delete(
-  '/:purchaseListId/share',
+router.post(
+  '/:purchaseListId/unShare',
   authMiddleware.checkAccessToken,
   commonMiddleware.isOwner(),
   commonMiddleware.isPurchaseBodyValid(PurchaseValidator.unShareBody),

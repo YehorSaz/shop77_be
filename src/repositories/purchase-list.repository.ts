@@ -1,5 +1,5 @@
 import { ApiError } from '../errors/api-error';
-import { IPurchase, IPurchaseList, IPurchaseListResponse } from '../interfaces';
+import { IPurchase, IPurchaseList, IPurchaseListAll } from '../interfaces';
 import { PurchaseListModel, UserModel } from '../models';
 
 class PurchaseListRepository {
@@ -25,11 +25,23 @@ class PurchaseListRepository {
     ]);
   }
 
-  public async getAllByUserId(userId: string): Promise<IPurchaseListResponse> {
-    const myLists = await PurchaseListModel.find({ user: userId });
-    const sharedWithMe = await PurchaseListModel.find({ sharedWith: userId });
+  public async getAllByUserId(userId: string): Promise<IPurchaseListAll> {
+    const user = await UserModel.findById(userId)
+      .select('purchaseLists')
+      .lean();
 
-    return { myLists, sharedWithMe };
+    if (!user) {
+      return { myLists: [], sharedLists: [] };
+    }
+
+    const myLists = await PurchaseListModel.find({
+      _id: { $in: user.purchaseLists.myLists },
+    }).lean();
+    const sharedLists = await PurchaseListModel.find({
+      _id: { $in: user.purchaseLists.sharedLists },
+    }).lean();
+
+    return { myLists, sharedLists };
   }
 
   public async getById(id: string): Promise<IPurchaseList> {
@@ -42,9 +54,11 @@ class PurchaseListRepository {
   ): Promise<IPurchaseList> {
     const purchaseList = await PurchaseListModel.create({
       title: dto.title,
-      items: dto.items,
+      reactId: dto.reactId,
+      items: [],
       user: userId,
-      sharedWith: dto.sharedWith,
+      sharedWith: [],
+      createdAt: dto.createdAt,
     });
     await UserModel.findByIdAndUpdate(userId, {
       $push: {
@@ -55,13 +69,11 @@ class PurchaseListRepository {
       },
     });
 
-    if (dto.sharedWith?.length) {
-      await UserModel.updateMany(
-        { _id: { $in: dto.sharedWith } },
-        { $push: { 'purchaseLists.sharedLists': purchaseList._id } },
-      );
-    }
-    return purchaseList;
+    const populatedList = await PurchaseListModel.findById(
+      purchaseList._id,
+    ).populate('user', 'name email');
+
+    return populatedList as IPurchaseList;
   }
 
   public async addItem(
@@ -192,6 +204,7 @@ class PurchaseListRepository {
         { $pull: { 'purchaseLists.sharedLists': purchaseListId } },
       ),
     ]);
+    return purchaseList;
   }
 
   public async shareList(
@@ -204,9 +217,6 @@ class PurchaseListRepository {
         { _id: { $in: usersId } },
         { $addToSet: { 'purchaseLists.sharedLists': purchaseListId } },
       ),
-      UserModel.findByIdAndUpdate(ownerId, {
-        $addToSet: { 'purchaseLists.sharedLists': purchaseListId },
-      }),
     ]);
 
     return await PurchaseListModel.findByIdAndUpdate(

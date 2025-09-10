@@ -24,13 +24,15 @@ class UserRepository {
   }
 
   public async getById(userId: string): Promise<IUser> {
-    const user = await UserModel.findById(userId);
-    return user;
+    return await UserModel.findById(userId);
+  }
+
+  public async getByEmail(email: Partial<IUser>): Promise<IUser | null> {
+    return await UserModel.findOne(email);
   }
 
   public async getMe(userId: string): Promise<IUser> {
-    const user = await UserModel.findById(userId);
-    return user;
+    return await UserModel.findById(userId);
   }
 
   public async updateById(userId: string, dto: Partial<IUser>): Promise<IUser> {

@@ -45,7 +45,11 @@ export class UserValidator {
     password: this.password.required(),
   });
 
-  public static addFriend = joi.object({
-    friendId: this.mongoId.required(),
-  });
+  public static friendId = this.mongoId.required();
+
+  public static queryEmail = joi
+    .string()
+    .regex(regexConstant.EMAIL)
+    .trim()
+    .required();
 }

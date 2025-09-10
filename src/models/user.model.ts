@@ -10,12 +10,14 @@ const userSchema = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, select: false },
     phone: { type: String, required: false },
+    purchaseLists: {
+      myLists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'purchaseLists' }],
+      sharedLists: [
+        { type: mongoose.Schema.Types.ObjectId, ref: 'purchaseLists' },
+      ],
+    },
     isVerified: { type: Boolean, required: true, default: false },
     isGoogleAuth: { type: Boolean, required: true, default: false },
-    purchaseLists: {
-      myLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
-      sharedLists: [{ type: mongoose.Schema.ObjectId, ref: 'purchaseLists' }],
-    },
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
   },
   {

@@ -33,6 +33,18 @@ class AuthController {
     }
   }
 
+  public async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+      const oldTokensId = req.res.locals.oldTokensId as string;
+      console.log(jwtPayload);
+      await authService.logout(jwtPayload, oldTokensId);
+      res.sendStatus(204);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   public async googleSignIn(req: Request, res: Response, next: NextFunction) {
     try {
       const { id_token } = req.body;

@@ -1,20 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 
+import { ListSocketEnum } from '../enums/socket.enums';
 import { ApiError } from '../errors/api-error';
+import { getAffectedUsers } from '../helpers/getAffectedUsers';
 import { IPurchase, IPurchaseList } from '../interfaces';
+import { io } from '../main';
 import { purchaseListService } from '../services';
 
 class PurchaseListController {
-  private static preparedItemsWithUserId(
-    items: IPurchase[] | undefined,
-    userId: string,
-  ): IPurchase[] | undefined {
-    return items?.map((item) => ({
-      ...item,
-      addedBy: userId,
-    }));
-  }
-
   public async getAllByUserId(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.res.locals.jwtPayload.userId as string;
@@ -25,6 +18,11 @@ class PurchaseListController {
     }
   }
 
+  public getListById = (req: Request, res: Response, next: NextFunction) => {
+    const purchaseList = res.locals.purchaseList;
+    res.status(200).json(purchaseList);
+  };
+
   public async addPurchaseList(
     req: Request,
     res: Response,
@@ -33,26 +31,7 @@ class PurchaseListController {
     try {
       const userId = req.res.locals.jwtPayload.userId as string;
       const dto = req.body as IPurchaseList;
-      if (
-        (!dto.items || dto.items.length === 0) &&
-        (!dto.sharedWith || dto.sharedWith.length === 0)
-      ) {
-        throw new ApiError(
-          'Cannot create a list without items or shared access',
-          400,
-        );
-      }
-      const preparedDto = {
-        ...dto,
-        items: PurchaseListController.preparedItemsWithUserId(
-          dto.items,
-          userId,
-        ),
-      };
-      const result = await purchaseListService.addPurchaseList(
-        userId,
-        preparedDto,
-      );
+      const result = await purchaseListService.addPurchaseList(userId, dto);
       res.status(201).json(result);
     } catch (e) {
       next(e);
@@ -68,11 +47,18 @@ class PurchaseListController {
         ...dto,
         addedBy: userId,
       };
-      const result = await purchaseListService.addItem(
+      const updatedList = await purchaseListService.addItem(
         purchaseListId,
         preparedItem,
       );
-      res.status(201).json(result);
+
+      const affectedUsers = getAffectedUsers(updatedList);
+
+      affectedUsers.forEach((user) => {
+        io.to(user).emit(ListSocketEnum.ITEM_ADDED, updatedList);
+      });
+
+      res.status(201).json(updatedList);
     } catch (e) {
       next(e);
     }
@@ -84,12 +70,18 @@ class PurchaseListController {
 
       const userId = req.res.locals.jwtPayload.userId as string;
 
-      const result = await purchaseListService.deleteItem(
+      const updatedList = await purchaseListService.deleteItem(
         purchaseListId,
         itemId,
         userId,
       );
-      res.status(201).json(result);
+
+      const affectedUsers = getAffectedUsers(updatedList);
+      affectedUsers.forEach((user) => {
+        io.to(user).emit(ListSocketEnum.ITEM_DELETED, updatedList);
+      });
+
+      res.status(201).json(updatedList);
     } catch (e) {
       next(e);
     }
@@ -147,11 +139,17 @@ class PurchaseListController {
       const { purchaseListId } = req.params;
       const userId = req.res.locals.jwtPayload.userId as string;
 
-      const result = await purchaseListService.deletePurchaseList(
+      const deletedList = await purchaseListService.deletePurchaseList(
         purchaseListId,
         userId,
       );
-      res.status(200).json(result);
+      const affectedUsers = getAffectedUsers(deletedList);
+
+      affectedUsers.forEach((id: string) => {
+        io.to(id).emit(ListSocketEnum.LIST_DELETED, purchaseListId);
+      });
+
+      res.status(200).json({ success: !!deletedList });
     } catch (e) {
       next(e);
     }
@@ -162,6 +160,7 @@ class PurchaseListController {
       const ownerId = req.res.locals.jwtPayload.userId as string;
       const { purchaseListId } = req.params;
       const { usersId } = req.body;
+
       if (!usersId) {
         throw new ApiError('No users to share', 400);
       }
@@ -170,6 +169,11 @@ class PurchaseListController {
         usersId,
         ownerId,
       );
+
+      usersId.forEach((id: string) => {
+        io.to(id).emit(ListSocketEnum.LIST_SHARED, result);
+      });
+
       res.status(200).json(result);
     } catch (e) {
       next(e);

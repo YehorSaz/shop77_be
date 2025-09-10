@@ -7,16 +7,16 @@ export interface IPurchase {
 
 export interface IPurchaseList {
   _id?: string;
-  reactId?: string;
+  reactId: string;
   title: string;
   items: IPurchase[];
   sharedWith: string[];
   user: string;
-  createdAt?: Date;
+  createdAt: Date;
   updatedAt?: Date;
 }
 
-export interface IPurchaseListResponse {
+export interface IPurchaseListAll {
   myLists: IPurchaseList[];
-  sharedWithMe: IPurchaseList[];
+  sharedLists: IPurchaseList[];
 }

@@ -44,6 +44,7 @@ class EmailService {
     const { subject, template } = emailConstants[type];
 
     context['verifyUrl'] = `${configs.VERIFY_URL}:${configs.API_PORT}/api/auth`;
+    context['frontUrl'] = `${configs.VERIFY_URL}:${configs.API_PORT}/api/auth`;
     const options = {
       to,
       subject,

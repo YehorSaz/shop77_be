@@ -1,5 +1,3 @@
-import { IPurchaseList } from './purchase-list.interface';
-
 export interface IUser {
   _id?: string;
   name: string;
@@ -8,8 +6,8 @@ export interface IUser {
   phone?: string;
   friends?: string[];
   purchaseLists?: {
-    myLists?: IPurchaseList[];
-    sharedLists?: IPurchaseList[];
+    myLists?: string[];
+    sharedLists?: string[];
   };
   isVerified: boolean;
   isGoogleAuth: boolean;

@@ -82,6 +82,18 @@ class AuthService {
     return { user: removePassFromUser(user), tokens };
   }
 
+  public async logout(
+    jwtPayload: ITokenPayload,
+    oldTokensId: string,
+  ): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+    await tokenRepository.deleteById(oldTokensId);
+    await actionTokenRepository.deleteByParams({ _userId: user._id });
+  }
+
   public async googleSignIn(
     id_token: string,
   ): Promise<{ user: IUserPublic; tokens: ITokenPair }> {
@@ -98,7 +110,6 @@ class AuthService {
       const dto = {
         name: payload.name,
         email: payload.email,
-        // password: await bcrypt.hash('P@$$word1', 10),
         phone: '',
         isVerified: true,
         isGoogleAuth: true,

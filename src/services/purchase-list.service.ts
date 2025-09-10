@@ -1,10 +1,14 @@
-import { IPurchase, IPurchaseList, IPurchaseListResponse } from '../interfaces';
-import { purchaseListRepository } from '../repositories/purchase-list.repository';
+import { IPurchase, IPurchaseList, IPurchaseListAll } from '../interfaces';
+import { purchaseListRepository } from '../repositories';
 
 class PurchaseListService {
-  public async getAllByUserId(userId: string): Promise<IPurchaseListResponse> {
+  public async getAllByUserId(userId: string): Promise<IPurchaseListAll> {
     return await purchaseListRepository.getAllByUserId(userId);
   }
+
+  // public async getSharedWithMeLists(userId: string): Promise<ISharedWithMe[]> {
+  //   return await purchaseListRepository.getSharedWithMeLists(userId);
+  // }
 
   public async addPurchaseList(
     userId: string,

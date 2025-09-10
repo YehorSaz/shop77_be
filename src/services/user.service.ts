@@ -1,3 +1,4 @@
+import { ApiError } from '../errors/api-error';
 import { removePassFromUser } from '../helpers/removePassFromUser-helper';
 import { IUserPublic } from '../interfaces';
 import { userRepository } from '../repositories';
@@ -9,6 +10,14 @@ class UserService {
 
   public async getById(userId: string): Promise<IUserPublic> {
     const user = await userRepository.getById(userId);
+    return removePassFromUser(user);
+  }
+
+  public async getByEmail(email: string): Promise<IUserPublic | null> {
+    const user = await userRepository.getByEmail({ email });
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
     return removePassFromUser(user);
   }
 

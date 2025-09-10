@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import { ObjectSchema } from 'joi';
+import { ObjectSchema, StringSchema } from 'joi';
 
 import { ApiError } from '../errors/api-error';
-import { userRepository } from '../repositories';
-import { purchaseListRepository } from '../repositories/purchase-list.repository';
+import { purchaseListRepository, userRepository } from '../repositories';
 
 class CommonMiddleware {
   public isAuthWithGoogle() {
@@ -38,6 +37,34 @@ class CommonMiddleware {
     };
   }
 
+  public isQueryValid(field: string, validator: StringSchema) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const value = await validator.validateAsync(req.query[field]);
+        req.query[field] = value;
+        next();
+      } catch (e) {
+        next(
+          new ApiError(e.details?.[0]?.message || 'Invalid query param', 400),
+        );
+      }
+    };
+  }
+  public isQueryParamValid(validator: StringSchema) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { friendId } = req.params;
+        const value = await validator.validateAsync(friendId);
+        req.params.friendId = value;
+        next();
+      } catch (e) {
+        next(
+          new ApiError(e.details?.[0]?.message || 'Invalid query param', 400),
+        );
+      }
+    };
+  }
+
   public isPurchaseBodyValid(validator: ObjectSchema) {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -65,6 +92,35 @@ class CommonMiddleware {
             403,
           );
         }
+        next();
+      } catch (e) {
+        next(e);
+      }
+    };
+  }
+
+  public hasAccessToPurchaseList() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.res.locals.jwtPayload.userId as string;
+      const purchaseListId = req.params.purchaseListId;
+
+      try {
+        const purchaseList =
+          await purchaseListRepository.getById(purchaseListId);
+        if (!purchaseList) {
+          throw new ApiError('Purchase list not found', 404);
+        }
+        if (
+          purchaseList.user.toString() !== userId &&
+          !purchaseList.sharedWith.some((id) => id.toString() === userId)
+        ) {
+          throw new ApiError(
+            'You are not authorized to access this purchase list',
+            403,
+          );
+        }
+        res.locals.purchaseList = purchaseList;
+
         next();
       } catch (e) {
         next(e);

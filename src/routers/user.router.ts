@@ -23,22 +23,30 @@ router.put(
 // delete me
 router.delete('/me', authMiddleware.checkAccessToken, userController.deleteMe);
 
+//get user by email
+router.get(
+  '/email',
+  authMiddleware.checkAccessToken,
+  commonMiddleware.isQueryValid('email', UserValidator.queryEmail),
+  userController.getByEmail,
+);
+
 // get user by Id
 router.get('/:userId', authMiddleware.checkAccessToken, userController.getById);
 
 // add friends
 router.post(
-  '/friends',
+  '/friends/add/:friendId',
   authMiddleware.checkAccessToken,
-  commonMiddleware.isBodyValid(UserValidator.addFriend),
+  commonMiddleware.isQueryParamValid(UserValidator.friendId),
   userController.addFriend,
 );
 
-// delete from friends
+// delete it from friends
 router.delete(
-  '/friends',
+  '/friends/delete/:friendId',
   authMiddleware.checkAccessToken,
-  commonMiddleware.isBodyValid(UserValidator.addFriend),
+  commonMiddleware.isQueryParamValid(UserValidator.friendId),
   userController.delFromFriends,
 );
 

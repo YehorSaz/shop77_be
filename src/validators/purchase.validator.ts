@@ -7,13 +7,20 @@ export class PurchaseValidator {
     name: joi.string().min(1).required(),
     isCompleted: joi.boolean().default(false),
     addedBy: joi.string().optional(),
+    _id: joi.string().regex(regexConstant.MONGO_ID).optional(),
+    createdAt: joi.date().optional(),
+    updatedAt: joi.date().optional(),
   });
   private static userId = joi.string().regex(regexConstant.MONGO_ID);
 
   public static createPurchaseList = joi.object({
     title: joi.string().min(1).max(50).required(),
-    items: joi.array().items(this.item),
-    sharedWith: joi.array().items(joi.string()),
+    reactId: joi.string().required(),
+    // items: joi.array().items(this.item).required(),
+    createdAt: joi.date().required(),
+    // sharedWith: joi.array().items(joi.string()),
+    // _id: joi.string().regex(regexConstant.MONGO_ID).optional(),
+    // updatedAt: joi.date().optional(),
   });
 
   public static updatePurchaseList = joi.object({

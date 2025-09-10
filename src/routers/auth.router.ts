@@ -22,6 +22,9 @@ router.post(
   authController.signIn,
 );
 
+// logout
+router.post('/logout', authMiddleware.checkAccessToken, authController.logout);
+
 // refresh
 router.post(
   '/refresh',
@@ -56,7 +59,7 @@ router.post(
 );
 
 router.put(
-  '/forgot-password',
+  '/forgot-password-set',
   commonMiddleware.isBodyValid(UserValidator.forgotPasswordSet),
   authMiddleware.checkActionToken(ActionTokenTypeEnum.FORGOT_PASSWORD),
   authController.forgotPasswordSet,
