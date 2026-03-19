@@ -1,5 +1,10 @@
 import { ApiError } from '../errors/api-error';
-import { IPurchase, IPurchaseList, IPurchaseListAll } from '../interfaces';
+import { populatePurchaseList } from '../helpers/populatePurchaseList';
+import {
+  IPurchase,
+  IPurchaseList,
+  IPurchaseListPopulated,
+} from '../interfaces';
 import { PurchaseListModel, UserModel } from '../models';
 
 class PurchaseListRepository {
@@ -25,23 +30,37 @@ class PurchaseListRepository {
     ]);
   }
 
-  public async getAllByUserId(userId: string): Promise<IPurchaseListAll> {
+  public async getAllByUserId(userId: string): Promise<IPurchaseList[]> {
     const user = await UserModel.findById(userId)
       .select('purchaseLists')
       .lean();
 
     if (!user) {
-      return { myLists: [], sharedLists: [] };
+      return [];
     }
 
-    const myLists = await PurchaseListModel.find({
-      _id: { $in: user.purchaseLists.myLists },
-    }).lean();
-    const sharedLists = await PurchaseListModel.find({
-      _id: { $in: user.purchaseLists.sharedLists },
-    }).lean();
+    // const myLists = await PurchaseListModel.find({
+    //   _id: { $in: user.purchaseLists.myLists },
+    // }).lean();
+    // const sharedLists = await PurchaseListModel.find({
+    //   _id: { $in: user.purchaseLists.sharedLists },
+    // }).lean();
+    const myListsIds = user.purchaseLists.myLists;
+    const sharedListsIds = user.purchaseLists.sharedLists;
+    const allListsIds = [...myListsIds, ...sharedListsIds];
 
-    return { myLists, sharedLists };
+    const allLists = await populatePurchaseList({ _id: { $in: allListsIds } });
+
+    // Фільтруємо на стороні застосунку
+    //     const myLists = allLists.filter(
+    //       list => myListsIds.some(id => id === list._id));
+    //     const sharedLists = allLists.filter(
+    //       list => sharedListsIds.some(id => id === list._id));
+
+    // const myLists = await populatePurchaseList({ _id: { $in: myListsIds } });
+    // const sharedLists = await populatePurchaseList({ _id: { $in: sharedListsIds } });
+
+    return allLists;
   }
 
   public async getById(id: string): Promise<IPurchaseList> {
@@ -79,26 +98,28 @@ class PurchaseListRepository {
   public async addItem(
     purchaseListId: string,
     preparedItem: IPurchase,
-  ): Promise<IPurchaseList> {
-    const purchaseList = await PurchaseListModel.findByIdAndUpdate(
+  ): Promise<IPurchaseListPopulated> {
+    const updatedList = await PurchaseListModel.findByIdAndUpdate(
       purchaseListId,
       { $push: { items: preparedItem } },
-      {
-        new: true,
-      },
-    );
+      { new: true },
+    )
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email')
+      .populate('items.addedBy', 'name email')
+      .lean<IPurchaseListPopulated>();
 
     if (!purchaseListId) {
       throw new ApiError('Purchase list not found', 404);
     }
-    return purchaseList;
+    return updatedList;
   }
 
   public async deleteItem(
     purchaseListId: string,
     itemId: string,
     userId: string,
-  ): Promise<IPurchaseList> {
+  ): Promise<IPurchaseListPopulated> {
     const purchaseList = await PurchaseListModel.findById(purchaseListId);
 
     if (!purchaseList) {
@@ -122,11 +143,17 @@ class PurchaseListRepository {
       throw new ApiError('You are not authorized to delete this item', 403);
     }
 
-    purchaseList.items.splice(itemIndex, 1);
+    const updatedList = await PurchaseListModel.findByIdAndUpdate(
+      purchaseListId,
+      { $pull: { items: { _id: itemId } } },
+      { new: true },
+    )
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email')
+      .populate('items.addedBy', 'name email')
+      .lean<IPurchaseListPopulated>();
 
-    await purchaseList.save();
-
-    return purchaseList;
+    return updatedList;
   }
 
   public async updateItem(
@@ -162,14 +189,18 @@ class PurchaseListRepository {
   public async updatePurchaseList(
     purchaseListId: string,
     updateDto: Partial<IPurchaseList>,
-  ): Promise<IPurchaseList> {
+  ): Promise<IPurchaseListPopulated> {
     const updatedList = await PurchaseListModel.findByIdAndUpdate(
       purchaseListId,
       updateDto,
       {
         new: true,
       },
-    );
+    )
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email')
+      .populate('items.addedBy', 'name email')
+      .lean<IPurchaseListPopulated>();
 
     if (!updatedList) {
       throw new ApiError('Purchase list not found', 404);
@@ -223,7 +254,11 @@ class PurchaseListRepository {
       purchaseListId,
       { $addToSet: { sharedWith: { $each: usersId } } },
       { new: true },
-    );
+    )
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email')
+      .populate('items.addedBy', 'name email')
+      .lean();
   }
 
   public async unShareList(

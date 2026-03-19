@@ -1,9 +1,7 @@
-import { Request, Response, Router } from 'express';
-import path from 'path'; // Для коректної роботи зі шляхами
+import { NextFunction, Request, Response, Router } from 'express';
+import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
-
-import { configs } from './configs/config';
 
 const swaggerRouter = Router();
 
@@ -12,17 +10,48 @@ try {
     path.join(__dirname, '../shop-list.swagger.yaml'),
   );
 
-  if (!swaggerSpec.servers || !Array.isArray(swaggerSpec.servers)) {
-    swaggerSpec.servers = [{ url: '' }];
+  // Видаляємо жорстко прописані сервери
+  if (swaggerSpec.servers) {
+    delete swaggerSpec.servers;
   }
 
-  const host = configs.SWAGGER_HOST || 'http://localhost';
-  const port = configs.API_PORT || 3005;
+  // Роут для віддачі динамічного JSON
+  swaggerRouter.get('/api-docs/swagger.json', (req: Request, res: Response) => {
+    const requestHost = req.get('host');
+    const protocol = requestHost?.includes('ngrok-free.dev') ? 'https' : 'http';
 
-  swaggerSpec.servers[0].url = `${host}:${port}/api`;
-  swaggerSpec.servers[0].description = 'Dynamic server URL';
+    const dynamicSpec = {
+      ...swaggerSpec,
+      servers: [
+        {
+          url: `${protocol}://${requestHost}/api`,
+          description: 'Dynamic Server',
+        },
+      ],
+    };
+    res.json(dynamicSpec);
+  });
 
-  swaggerRouter.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  // Основний роут документації
+  swaggerRouter.use('/api-docs', swaggerUi.serve);
+
+  // Додаємо тип NextFunction для виправлення помилки TS2554
+  swaggerRouter.get(
+    '/api-docs',
+    (req: Request, res: Response, next: NextFunction) => {
+      const requestHost = req.get('host');
+      const protocol = requestHost?.includes('ngrok-free.dev')
+        ? 'https'
+        : 'http';
+
+      // Викликаємо setup з трьома аргументами (req, res, next)
+      swaggerUi.setup(undefined, {
+        swaggerOptions: {
+          url: `${protocol}://${requestHost}/api-docs/swagger.json`,
+        },
+      })(req, res, next); // Передаємо next сюди
+    },
+  );
 } catch (error) {
   console.error('Failed to load Swagger spec:', error);
   swaggerRouter.use('/api-docs', (req: Request, res: Response) => {

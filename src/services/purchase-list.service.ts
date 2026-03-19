@@ -1,8 +1,12 @@
-import { IPurchase, IPurchaseList, IPurchaseListAll } from '../interfaces';
+import {
+  IPurchase,
+  IPurchaseList,
+  IPurchaseListPopulated,
+} from '../interfaces';
 import { purchaseListRepository } from '../repositories';
 
 class PurchaseListService {
-  public async getAllByUserId(userId: string): Promise<IPurchaseListAll> {
+  public async getAllByUserId(userId: string): Promise<IPurchaseList[]> {
     return await purchaseListRepository.getAllByUserId(userId);
   }
 
@@ -20,7 +24,7 @@ class PurchaseListService {
   public async updatePurchaseList(
     purchaseListId: string,
     updateDto: Partial<IPurchaseList>,
-  ): Promise<IPurchaseList> {
+  ): Promise<IPurchaseListPopulated> {
     return await purchaseListRepository.updatePurchaseList(
       purchaseListId,
       updateDto,
@@ -37,7 +41,7 @@ class PurchaseListService {
   public async addItem(
     purchaseListId: string,
     preparedItem: IPurchase,
-  ): Promise<IPurchaseList> {
+  ): Promise<IPurchaseListPopulated> {
     return await purchaseListRepository.addItem(purchaseListId, preparedItem);
   }
 
@@ -45,7 +49,7 @@ class PurchaseListService {
     purchaseListId: string,
     itemId: string,
     userId: string,
-  ): Promise<IPurchaseList> {
+  ): Promise<IPurchaseListPopulated> {
     return await purchaseListRepository.deleteItem(
       purchaseListId,
       itemId,

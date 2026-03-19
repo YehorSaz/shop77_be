@@ -16,11 +16,7 @@ export class PurchaseValidator {
   public static createPurchaseList = joi.object({
     title: joi.string().min(1).max(50).required(),
     reactId: joi.string().required(),
-    // items: joi.array().items(this.item).required(),
     createdAt: joi.date().required(),
-    // sharedWith: joi.array().items(joi.string()),
-    // _id: joi.string().regex(regexConstant.MONGO_ID).optional(),
-    // updatedAt: joi.date().optional(),
   });
 
   public static updatePurchaseList = joi.object({

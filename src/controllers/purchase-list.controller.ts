@@ -2,7 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 
 import { ListSocketEnum } from '../enums/socket.enums';
 import { ApiError } from '../errors/api-error';
-import { getAffectedUsers } from '../helpers/getAffectedUsers';
+import {
+  getAffectedUsers,
+  getAffectedUsersPopulated,
+} from '../helpers/getAffectedUsers';
 import { IPurchase, IPurchaseList } from '../interfaces';
 import { io } from '../main';
 import { purchaseListService } from '../services';
@@ -52,7 +55,7 @@ class PurchaseListController {
         preparedItem,
       );
 
-      const affectedUsers = getAffectedUsers(updatedList);
+      const affectedUsers = getAffectedUsersPopulated(updatedList);
 
       affectedUsers.forEach((user) => {
         io.to(user).emit(ListSocketEnum.ITEM_ADDED, updatedList);
@@ -76,7 +79,7 @@ class PurchaseListController {
         userId,
       );
 
-      const affectedUsers = getAffectedUsers(updatedList);
+      const affectedUsers = getAffectedUsersPopulated(updatedList);
       affectedUsers.forEach((user) => {
         io.to(user).emit(ListSocketEnum.ITEM_DELETED, updatedList);
       });
@@ -119,12 +122,19 @@ class PurchaseListController {
     try {
       const { purchaseListId } = req.params;
       const updateDto = req.body;
+      console.log('updateDto', updateDto);
 
-      const result = await purchaseListService.updatePurchaseList(
+      const updatedList = await purchaseListService.updatePurchaseList(
         purchaseListId,
         updateDto,
       );
-      res.status(200).json(result);
+
+      const affectedUsers = getAffectedUsersPopulated(updatedList);
+      affectedUsers.forEach((user) => {
+        io.to(user).emit(ListSocketEnum.LIST_UPDATED, updatedList);
+      });
+
+      res.status(200).json(updatedList);
     } catch (e) {
       next(e);
     }
@@ -161,6 +171,9 @@ class PurchaseListController {
       const { purchaseListId } = req.params;
       const { usersId } = req.body;
 
+      console.log('usersId', usersId);
+      console.log('purchaseListId', purchaseListId);
+
       if (!usersId) {
         throw new ApiError('No users to share', 400);
       }
@@ -169,6 +182,7 @@ class PurchaseListController {
         usersId,
         ownerId,
       );
+      console.log('result', result);
 
       usersId.forEach((id: string) => {
         io.to(id).emit(ListSocketEnum.LIST_SHARED, result);

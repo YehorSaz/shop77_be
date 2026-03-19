@@ -14,7 +14,6 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
       description: 'JWT token used for authenticating requests. Example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
   schemas:
     User:
@@ -22,7 +21,9 @@ components:
       properties:
         _id:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 67a6483cb40aa919bb02a967
+          description: "The 24-character hexadecimal assigned by MongoDB to the user"
         name:
           type: string
           example: user123
@@ -45,18 +46,21 @@ components:
               type: array
               items:
                 type: string
+                pattern: '^[0-9a-fA-F]{24}$'
               example:
               - 6795634b37631dd54570f0ca
             sharedLists:
               type: array
               items:
                 type: string
+                pattern: '^[0-9a-fA-F]{24}$'
               example:
               - 67a6483cb40aa919bb02a968
         friends:
           type: array
           items:
             type: string
+            pattern: '^[0-9a-fA-F]{24}$'
           example:
           - 66f4009acb445514a69e1b34
         createdAt:
@@ -78,6 +82,7 @@ components:
       properties:
         _id:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: "6873d3c78cf311b2dc353705"
         name:
           type: string
@@ -91,7 +96,9 @@ components:
       properties:
         _id:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: "68854e1480eda28863f9720a"
+          description: "The 24-character hexadecimal assigned by MongoDB to the list"
         title:
           type: string
           example: "List title"
@@ -106,7 +113,9 @@ components:
       properties:
         _id:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 679879b5a74bed340579edcb
+          description: "The 24-character hexadecimal assigned by MongoDB to the item"
         name:
           type: string
           example: lemon
@@ -115,17 +124,18 @@ components:
           example: false
         addedBy:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 67a6483cb40aa919bb02a967
       required:
-      - _id
       - name
-      - addedBy
     PurchaseList:
       type: object
       properties:
         _id:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 6795634b37631dd54570f0ca
+          description: "The 24-character hexadecimal assigned by MongoDB to the list"
         title:
           type: string
           example: My new list
@@ -146,11 +156,13 @@ components:
           example: '2023-01-02T12:00:00Z'
         user:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 67a6483cb40aa919bb02a967
         sharedWith:
           type: array
           items:
             type: string
+            pattern: '^[0-9a-fA-F]{24}$'
           example:
           - 66f4009acb445514a69e1b34
       required:
@@ -205,8 +217,42 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 67a6483cb40aa919bb02a967
+      responses:
+        '200':
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/email:
+    get:
+      tags:
+      - users
+      summary: Get user by email
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: email
+        in: query
+        schema:
+          type: string
+        required: true
+        example: user@example.com
       responses:
         '200':
           description: User data
@@ -310,28 +356,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /users/friends:
-    get:
-      tags:
-      - users
-      summary: Get all friends of the current user
-      security:
-      - bearerAuth: []
-      responses:
-        '200':
-          description: List of friends
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /users/friends/add/{friendId}:
     post:
       tags:
@@ -345,6 +369,7 @@ paths:
         required: true
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         description: ID of the friend to add
       responses:
         '200':
@@ -378,6 +403,7 @@ paths:
         required: true
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         description: ID of the friend to delete
       responses:
         '200':
@@ -392,6 +418,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Logout current user
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User logged out
         '401':
           description: Unauthorized
           content:
@@ -569,7 +619,7 @@ paths:
                   example: user@gmail.com
                 password:
                   type: string
-                  example: P@$$$word1
+                  example: P@$$word1
               required:
               - email
               - password
@@ -680,10 +730,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
   /auth/forgot-password:
-    put:
+    post:
       tags:
       - auth
-      summary: Reset forgotten password
+      summary: Send password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '204':
+          description: Reset email sent
+        '400':
+          description: Invalid email
+
+  /auth/forgot-password-set:
+    patch:
+      tags:
+      - auth
+      summary: Set new password using token
       security:
       - bearerAuth: []
       requestBody:
@@ -692,39 +765,45 @@ paths:
           application/json:
             schema:
               type: object
+              required: [password]
               properties:
-                oldPassword:
+                password:
                   type: string
-                  example: P@$$word1
-                newPassword:
-                  type: string
-                  example: P@$$word2
-              required:
-              - oldPassword
-              - newPassword
+                  example: "NewStrongPassword123!"
       responses:
-        '200':
-          description: Password reset
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Password reset successfully
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '204':
+          description: Password updated successfully
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          description: Invalid or expired token
+  /auth/forgot-password-set:
+    patch:
+      tags:
+      - Auth
+      summary: Set new password after forgot password request
+      description: Use the Action Token from the email to authorize this request.
+      security:
+      - bearerAuth: [] 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  example: "MyNewSafePassword2026"
+                  description: The new password for the account.
+      responses:
+        '204':
+          description: Password has been successfully reset.
+        '401':
+          description: Invalid or expired action token.
+        '400':
+          description: Password does not meet security requirements.
   /purchase-list:
     post:
       tags:
@@ -807,32 +886,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /purchase-lists/sharedWithMe:
-    get:
-      tags:
-      - purchase
-      summary: Get all purchase lists shared with the current user
-      security:
-      - bearerAuth: []
-      responses:
-        '200':
-          description: List of shared purchase lists
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  SharedLists:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/SharedList'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /purchase-lists/{purchaseListId}:
+
+  /purchase-list/{purchaseListId}:
     get:
       summary: Get purchase list by ID
       tags:
@@ -843,6 +898,7 @@ paths:
           required: true
           schema:
             type: string
+            pattern: '^[0-9a-fA-F]{24}$'
           description: ID of the purchase list
       responses:
         '200':
@@ -859,7 +915,6 @@ paths:
           description: Purchase list not found
       security:
         - bearerAuth: []
-  /purchase-list/{purchaseListId}:
     put:
       tags:
       - purchase
@@ -871,6 +926,7 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       requestBody:
@@ -927,6 +983,7 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       responses:
@@ -964,6 +1021,7 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       requestBody:
@@ -977,6 +1035,7 @@ paths:
                   type: array
                   items:
                       type: string
+                      pattern: '^[0-9a-fA-F]{24}$'
                   example: [66f4009acb445514a69e1b34, 66f4009acb445514a69e1b34]
               required:
               - usersId
@@ -987,6 +1046,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PurchaseList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /purchase-list/{purchaseListId}/unShare:
+    post:
+      tags:
+      - purchase
+      summary: Unshare purchase list with another user
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: purchaseListId
+        in: path
+        schema:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+        required: true
+        example: 6795634b37631dd54570f0ca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{24}$'
+                  example: 66f4009acb445514a69e1b34
+              required:
+              - userId
+      responses:
+        '200':
+          description: List unshared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User removed from shared list
         '400':
           description: Bad request
           content:
@@ -1017,6 +1133,7 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       requestBody:
@@ -1076,12 +1193,14 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       - name: itemId
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 679879b5a74bed340579edcb
       requestBody:
@@ -1133,12 +1252,14 @@ paths:
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 6795634b37631dd54570f0ca
       - name: itemId
         in: path
         schema:
           type: string
+          pattern: '^[0-9a-fA-F]{24}$'
         required: true
         example: 679879b5a74bed340579edcb
       responses:

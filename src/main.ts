@@ -62,7 +62,7 @@ process.on('uncaughtException', (e) => {
   process.exit(1);
 });
 
-httpServer.listen(configs.API_PORT, configs.API_HOST, async () => {
+httpServer.listen(configs.API_PORT, '0.0.0.0', async () => {
   await mongoose.connect(configs.DB_URI);
   console.log(
     `Server is running at http://${configs.API_HOST}:${configs.API_PORT}`,

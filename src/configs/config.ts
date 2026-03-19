@@ -24,6 +24,7 @@ export const configs = {
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
 
   VERIFY_URL: process.env.VERIFY_URL,
+  FRONT_URL: process.env.FRONT_URL,
 
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 
