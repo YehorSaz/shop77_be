@@ -4,4 +4,4 @@ dist
 .env
 yarn.lock
 shop77_be.iml
-!/src/xToDo/todo.txt
+/src/xToDo/todo.txt
